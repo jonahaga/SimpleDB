@@ -1,55 +1,42 @@
 import sys
 
 database = [{}]
-current_level = 0
+
+def level():
+    return len(database)-1
 
 def end():
     sys.exit(0)
 
 def set_name(name, val):
-    database[current_level][name] = val
+    database[level()][name] = val
 
-def get(name, *args):
+def get(name):
     for lvl in range(len(database)-1, -1, -1):
-        if args:
-            if name in database[lvl]:
-                return database[lvl][name]
-            else:
-                pass
-        else:
-            if name in database[lvl]:
-                sys.stdout.write(database[lvl][name] + '\n')
-                return
+        if name in database[lvl]:
+            return database[lvl][name]
             
-    if not args:
-        sys.stdout.write("NULL\n")                
+    return 'NULL'
 
 def begin():
     database.append({})
-    global current_level
-    current_level += 1
 
 def rollback():
-    global current_level
-    if current_level == 0:
-        sys.stdout.write("NO TRANSACTION\n")
+    if level() == 0:
+        return 'NO TRANSACTION'
     else:
-        database.remove(database[current_level])
-        current_level -= 1
+        database.remove(database[level()])
 
 def commit():
-    global current_level 
-    if current_level == 0:
-        sys.stdout.write("NO TRANSACTION\n")
+    if level() == 0:
+        return 'NO TRANSACTION'
     else:
         for lvl in (range(len(database)-1, 0, -1)):
             database[lvl-1].update(database[lvl])
             database.remove(database[lvl])
 
-    current_level = 0
-
 def unset(name):
-    database[current_level][name] = "NULL"
+    database[level()][name] = "NULL"
 
 def numequalto(val):
     count = 0
@@ -57,31 +44,37 @@ def numequalto(val):
 
     for name, value in database[i].iteritems():
         if value == val:
-            if get(name, val) == val:
-                count += 1
-            elif get(name, val) == 'NULL':
+            if database[level()].get(name) == 'NULL':
                 count = 0
-        i += 1
+            else:
+                count += 1
+                i += 1
 
-    sys.stdout.write(str(count) + '\n')
+    return str(count)
 
-for line in sys.stdin:
-    cmd = line.split()
-    switch = {'BEGIN': begin,
-              'ROLLBACK': rollback,
-              'COMMIT': commit,
-              'SET': set_name,
-              'GET': get,
-              'UNSET': unset,
-              'NUMEQUALTO': numequalto,
-              'END': end }
-    
-    if cmd[0] in switch:
-        if len(cmd) == 1:
-            switch[cmd[0]]()
-        elif len(cmd) == 2:
-            switch[cmd[0]](cmd[1])
-        elif len(cmd) == 3:
-            switch[cmd[0]](cmd[1], cmd[2])
-    else:
-        pass
+if __name__ == "__main__":
+    for line in sys.stdin:
+        cmd = line.split()
+        switch = {'BEGIN': begin,
+                  'ROLLBACK': rollback,
+                  'COMMIT': commit,
+                  'SET': set_name,
+                  'GET': get,
+                  'UNSET': unset,
+                  'NUMEQUALTO': numequalto,
+                  'END': end }
+        
+        if cmd[0] in switch:
+            if len(cmd) == 1:
+                data = switch[cmd[0]]()
+            elif len(cmd) == 2:
+                data = switch[cmd[0]](cmd[1])
+            elif len(cmd) == 3:
+                data = switch[cmd[0]](cmd[1], cmd[2])
+        if data:
+            sys.stdout.write(str(data) + '\n')
+        else:
+            pass
+
+
+    print database
