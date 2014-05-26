@@ -51,7 +51,7 @@ def rollback():
 
     items = database[level()].items()
     for i in items:
-        if i[1] != 'NULL':
+        if i[1] != 'UNSET VAL':
             fq[i[1]] -= 1    
         if database[level()-1]:
             fq[rb_val(i, 1)] += 1
@@ -71,7 +71,7 @@ def commit():
 def unset(name):
     prev_val = get(name)
     fq[prev_val] -= 1
-    database[level()][name] = "NULL"
+    database[level()][name] = 'UNSET VAL'
 
 def numequalto(val):
     if fq.get(val):
